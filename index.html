@@ -20,6 +20,10 @@
       --gold: #ffc857;
       --panel: rgba(12, 18, 38, 0.8);
       --glow: 0 0 18px rgba(110, 243, 255, 0.3);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
     }
     * { box-sizing: border-box; }
     html, body {
@@ -30,6 +34,8 @@
       color: var(--fg);
       overscroll-behavior: none;
       user-select: none;
+      min-height: 100dvh;
+      touch-action: none;
     }
     body::before {
       content: "";
@@ -47,6 +53,7 @@
       position: relative;
       width: 100%;
       height: 100vh;
+      min-height: 100dvh;
       overflow: hidden;
       display: flex;
       align-items: center;
@@ -59,6 +66,7 @@
                   radial-gradient(circle at 20% 60%, rgba(255, 92, 141, 0.05), transparent 30%),
                   linear-gradient(180deg, #050915 0%, #090f20 70%, #050915 100%);
       box-shadow: inset 0 0 40px rgba(0,0,0,0.55);
+      touch-action: none;
     }
     #hud {
       position: absolute;
@@ -68,13 +76,17 @@
       flex-direction: column;
       justify-content: space-between;
       z-index: 2;
+      padding: clamp(12px, 2vw, 20px);
+      padding-top: calc(var(--safe-top) + 10px);
+      padding-bottom: calc(var(--safe-bottom) + 12px);
     }
     .top-row, .bottom-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 18px 22px;
-      gap: 16px;
+      padding: 14px 10px;
+      gap: 14px;
+      flex-wrap: wrap;
     }
     .stat-block {
       background: rgba(12, 18, 38, 0.72);
@@ -82,7 +94,9 @@
       border-radius: 14px;
       padding: 12px 14px;
       box-shadow: var(--glow);
-      min-width: 240px;
+      min-width: 220px;
+      width: 100%;
+      max-width: 420px;
     }
     .stat-block h2 {
       margin: 0;
@@ -224,6 +238,8 @@
       cursor: pointer;
       transition: transform 140ms ease, box-shadow 140ms ease, border 140ms ease;
       box-shadow: var(--glow);
+      min-height: 44px;
+      touch-action: manipulation;
     }
     button:hover {
       transform: translateY(-1px) scale(1.01);
@@ -236,7 +252,7 @@
     #toast {
       position: absolute;
       left: 50%;
-      bottom: 28px;
+      bottom: calc(24px + var(--safe-bottom));
       transform: translateX(-50%);
       background: rgba(12, 18, 38, 0.9);
       border: 1px solid rgba(110, 243, 255, 0.3);
@@ -268,13 +284,95 @@
       color: var(--fg);
     }
     .badge .small { color: var(--muted); display: block; font-size: 12px; }
+    .touch-only { display: none; }
+    .desktop-only { display: inline-flex; }
+    .is-touch .touch-only { display: inline-flex; }
+    .is-touch .desktop-only { display: none; }
+    #touch-controls {
+      position: absolute;
+      inset: auto 0 calc(var(--safe-bottom) + 8px) 0;
+      display: none;
+      grid-template-columns: repeat(3, minmax(120px, 1fr));
+      gap: 10px;
+      align-items: end;
+      padding: 0 calc(14px + var(--safe-right)) 0 calc(14px + var(--safe-left));
+      z-index: 5;
+      pointer-events: none;
+    }
+    #touch-controls.visible {
+      display: grid;
+      pointer-events: auto;
+    }
+    .touch-pad {
+      background: rgba(7, 12, 25, 0.7);
+      border: 1px solid rgba(110, 243, 255, 0.3);
+      border-radius: 18px;
+      padding: 10px;
+      position: relative;
+      min-height: 140px;
+      box-shadow: var(--glow);
+    }
+    .touch-pad h3 {
+      margin: 0 0 6px 2px;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .joystick {
+      position: relative;
+      width: 100%;
+      height: 110px;
+      border-radius: 16px;
+      background: radial-gradient(circle at 50% 50%, rgba(110,243,255,0.08), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+      touch-action: none;
+    }
+    .stick-knob {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 54px;
+      height: 54px;
+      margin-left: -27px;
+      margin-top: -27px;
+      border-radius: 50%;
+      background: rgba(110, 243, 255, 0.2);
+      border: 1px solid rgba(110, 243, 255, 0.5);
+      box-shadow: var(--glow);
+      transition: transform 90ms ease;
+    }
+    .touch-actions {
+      display: grid;
+      gap: 10px;
+      height: 100%;
+    }
+    .touch-actions.touch-pad { align-content: space-between; }
+    .touch-actions h3 { margin-bottom: 4px; }
+    }
+    .touch-actions button {
+      width: 100%;
+    }
     @media (max-width: 760px) {
       h1 { font-size: 32px; }
-      .stat-block { min-width: auto; width: 100%; }
+      .stat-block { min-width: auto; width: 100%; max-width: 100%; }
       .bars .bar { width: 100%; }
-      .top-row, .bottom-row { flex-direction: column; align-items: flex-start; }
-      .panel { padding: 18px; }
+      .top-row, .bottom-row { flex-direction: column; align-items: stretch; padding: 12px 8px; }
+      .panel { padding: 18px; width: 92vw; }
       button { width: 100%; text-align: center; }
+      #touch-controls { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+      #touch-controls .touch-actions { grid-column: span 2; }
+      #toast { left: 50%; width: calc(100% - 32px); }
+    }
+    @media (max-width: 520px) {
+      h1 { font-size: 26px; }
+      .pill, .callout { font-size: 13px; }
+      .inline-stats { font-size: 13px; }
+      .top-row, .bottom-row { padding: 10px 6px; gap: 10px; }
+      .touch-pad { min-height: 120px; }
+      .joystick { height: 96px; }
+      .stick-knob { width: 48px; height: 48px; margin-left: -24px; margin-top: -24px; }
     }
   </style>
 </head>
@@ -309,7 +407,7 @@
         </div>
       </div>
       <div class="bottom-row">
-        <div class="pill">Move: WASD / Arrows • Aim: Mouse • Fire: Hold Left Click • Nova Blast: Space • Pause: P</div>
+        <div class="pill" id="control-hint">Move: WASD / Arrows • Aim: Mouse • Fire: Hold Left Click • Nova Blast: Space • Pause: P</div>
         <div class="callout" id="callout-text">Tip: Collect luminous drops for shields and damage boosts.</div>
       </div>
     </div>
@@ -321,11 +419,12 @@
           <h1>Neon <span>Nova</span>: Last Light</h1>
           <p class="lede">Command a prototype starfighter against the Voidborn Legion. Earn momentum, chain kills for style, and detonate a Nova to survive the onslaught.</p>
           <div class="controls">
-            <div class="pill">WASD / Arrows: Thrust</div>
-            <div class="pill">Mouse: Aim</div>
-            <div class="pill">Hold LMB: Fire</div>
-            <div class="pill">Space: Nova Blast</div>
-            <div class="pill">P: Pause</div>
+            <div class="pill desktop-only">WASD / Arrows: Thrust</div>
+            <div class="pill desktop-only">Mouse: Aim</div>
+            <div class="pill desktop-only">Hold LMB: Fire</div>
+            <div class="pill desktop-only">Space: Nova Blast</div>
+            <div class="pill desktop-only">P: Pause</div>
+            <div class="pill touch-only">Touch: Drag left pad to thrust • Drag right pad to aim + fire • Tap Nova button</div>
           </div>
           <div class="grid">
             <div class="badge"><span class="small">Threat</span>Dynamic waves + Boss</div>
@@ -368,8 +467,28 @@
           <p class="lede" id="end-copy">The Voidborn breach holds—for now. Ready up and dive again.</p>
           <div style="margin-top:16px; display:flex; gap:10px; flex-wrap: wrap;">
             <button id="restart-btn" onclick="startGame()">Run It Back</button>
-            <button class="secondary" id="menu-btn" onclick="setScreen('menu')">Return to Briefing</button>
+          <button class="secondary" id="menu-btn" onclick="setScreen('menu')">Return to Briefing</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="touch-controls" aria-hidden="true">
+      <div class="touch-pad">
+        <h3>Move</h3>
+        <div class="joystick" id="move-stick">
+          <div class="stick-knob"></div>
+        </div>
+      </div>
+      <div class="touch-pad touch-actions">
+        <h3>Actions</h3>
+        <button id="nova-btn">Nova</button>
+        <button class="secondary" id="pause-btn">Pause</button>
+      </div>
+      <div class="touch-pad">
+        <h3>Aim / Fire</h3>
+        <div class="joystick" id="aim-stick">
+          <div class="stick-knob"></div>
         </div>
       </div>
     </div>
@@ -385,8 +504,9 @@
     let width = 1280, height = 720;
 
     function resize() {
-      width = window.innerWidth;
-      height = window.innerHeight;
+      const viewport = window.visualViewport;
+      width = viewport ? viewport.width : window.innerWidth;
+      height = viewport ? viewport.height : window.innerHeight;
       canvas.width = width * DPR;
       canvas.height = height * DPR;
       canvas.style.width = width + 'px';
@@ -419,6 +539,13 @@
     const finalTime = document.getElementById('final-time');
     const bestScoreEl = document.getElementById('best-score');
     const bestStart = document.getElementById('best-start');
+    const controlHint = document.getElementById('control-hint');
+    const touchControls = document.getElementById('touch-controls');
+    const moveStick = document.getElementById('move-stick');
+    const aimStick = document.getElementById('aim-stick');
+    const novaBtn = document.getElementById('nova-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     // UI buttons (guarded binding)
     function bindClick(id, fn) {
@@ -453,7 +580,14 @@
     let bestScore = Number(storage.get('neon-nova-best', 0) || 0);
     if (bestScoreEl) bestScoreEl.textContent = bestScore;
     if (bestStart) bestStart.textContent = bestScore;
+    if (isTouchDevice) document.body.classList.add('is-touch');
+    updateControlHint();
     let mouse = { x: width / 2, y: height / 2, down: false };
+    let mouseButtonDown = false;
+    const touchInput = {
+      move: { active: false, dx: 0, dy: 0, id: null },
+      aim: { active: false, dx: 0, dy: 0, id: null },
+    };
     let keys = new Set();
     let stars = [];
     let particles = [];
@@ -602,6 +736,7 @@
       if (target === 'story') storyScreen.classList.add('active');
       if (target === 'gameover') gameOverScreen.classList.add('active');
       if (screens) screens.style.pointerEvents = target ? 'auto' : 'none';
+      updateTouchControlsVisibility();
     }
     // Expose for inline handlers
     window.startGame = startGame;
@@ -624,6 +759,85 @@
       callout.textContent = notes[Math.floor(Math.random() * notes.length)];
     }
 
+    function updateControlHint() {
+      if (!controlHint) return;
+      controlHint.textContent = isTouchDevice
+        ? 'Touch: Drag left pad to thrust • Drag right pad to aim/fire • Tap Nova to clear space'
+        : 'Move: WASD / Arrows • Aim: Mouse • Fire: Hold Left Click • Nova Blast: Space • Pause: P';
+    }
+
+    function updateTouchControlsVisibility() {
+      if (!touchControls) return;
+      const show = isTouchDevice && (state === STATES.PLAYING || state === STATES.PAUSE);
+      touchControls.classList.toggle('visible', show);
+    }
+
+    function applyTouchAim() {
+      if (!touchInput.aim.active) return;
+      const dx = touchInput.aim.dx;
+      const dy = touchInput.aim.dy;
+      const mag = Math.hypot(dx, dy);
+      if (mag < 0.08) {
+        if (!mouseButtonDown) mouse.down = false;
+        return;
+      }
+      const scale = Math.max(0.35, mag);
+      mouse.x = player.x + dx * 520 * scale;
+      mouse.y = player.y + dy * 520 * scale;
+      mouse.down = true;
+    }
+
+    function bindStick(stick, key) {
+      if (!stick) return;
+      const knob = stick.querySelector('.stick-knob');
+      const reset = () => {
+        touchInput[key].active = false;
+        touchInput[key].dx = 0;
+        touchInput[key].dy = 0;
+        touchInput[key].id = null;
+        if (knob) knob.style.transform = 'translate(0px, 0px)';
+        if (key === 'aim' && !mouseButtonDown) mouse.down = false;
+      };
+      const handleMove = (e) => {
+        const rect = stick.getBoundingClientRect();
+        const dx = clamp((e.clientX - rect.left - rect.width / 2) / (rect.width / 2), -1, 1);
+        const dy = clamp((e.clientY - rect.top - rect.height / 2) / (rect.height / 2), -1, 1);
+        touchInput[key].active = true;
+        touchInput[key].dx = dx;
+        touchInput[key].dy = dy;
+        touchInput[key].id = e.pointerId;
+        if (knob) knob.style.transform = `translate(${dx * rect.width * 0.18}px, ${dy * rect.height * 0.18}px)`;
+        if (key === 'aim') applyTouchAim();
+      };
+      stick.addEventListener('pointerdown', (e) => {
+        if (!isTouchDevice) return;
+        e.preventDefault();
+        initAudio();
+        stick.setPointerCapture(e.pointerId);
+        handleMove(e);
+      });
+      stick.addEventListener('pointermove', (e) => {
+        if (touchInput[key].id !== e.pointerId) return;
+        e.preventDefault();
+        handleMove(e);
+      });
+      stick.addEventListener('pointerup', (e) => {
+        if (touchInput[key].id !== null && touchInput[key].id !== e.pointerId) return;
+        e.preventDefault();
+        reset();
+      });
+      stick.addEventListener('pointercancel', reset);
+      stick.addEventListener('lostpointercapture', reset);
+    }
+
+    function initTouchControls() {
+      if (!isTouchDevice) return;
+      bindStick(moveStick, 'move');
+      bindStick(aimStick, 'aim');
+      if (novaBtn) novaBtn.addEventListener('click', () => { initAudio(); novaBlast(); });
+      if (pauseBtn) pauseBtn.addEventListener('click', () => { initAudio(); togglePause(); });
+    }
+
     // Input handling
     window.addEventListener('mousemove', (e) => {
       const rect = canvas.getBoundingClientRect();
@@ -632,9 +846,13 @@
     });
     window.addEventListener('mousedown', (e) => {
       mouse.down = true;
+      mouseButtonDown = true;
       initAudio();
     });
-    window.addEventListener('mouseup', () => mouse.down = false);
+    window.addEventListener('mouseup', () => {
+      mouseButtonDown = false;
+      mouse.down = touchInput.aim.active;
+    });
     window.addEventListener('keydown', (e) => {
       if (e.repeat) return;
       if (e.code === 'Space') e.preventDefault();
@@ -648,11 +866,13 @@
       if (state === STATES.PAUSE) {
         state = STATES.PLAYING;
         showToast('Resumed');
+        updateTouchControlsVisibility();
         return;
       }
       if (state !== STATES.PLAYING) return;
       state = STATES.PAUSE;
       showToast('Paused');
+      updateTouchControlsVisibility();
     }
 
     // Game lifecycle
@@ -662,6 +882,10 @@
       wave = 0;
       multiplier = 1;
       bossesCleared = 0;
+      touchInput.move.active = false;
+      touchInput.aim.active = false;
+      mouse.down = false;
+      mouseButtonDown = false;
       player.x = width / 2;
       player.y = height / 2;
       player.vx = player.vy = 0;
@@ -682,6 +906,7 @@
       calloutTimer = rand(6, 12);
       setScreen(null);
       state = STATES.PLAYING;
+      updateTouchControlsVisibility();
       showToast('Systems hot. Wave 1 incoming...');
       spawnWave();
     }
@@ -715,6 +940,7 @@
     }
 
     function novaBlast() {
+      if (state !== STATES.PLAYING) return;
       if (player.novaCooldown > 0) return;
       player.novaCooldown = player.novaDelay;
       player.invuln = 0.6;
@@ -755,14 +981,20 @@
       runTime += dt;
       calloutTimer -= dt;
       if (calloutTimer <= 0) { randomCallout(); calloutTimer = rand(8, 14); }
+      if (touchInput.aim.active) applyTouchAim();
 
       // Input & movement
       let ax = 0, ay = 0;
+      if (touchInput.move.active) {
+        ax += touchInput.move.dx;
+        ay += touchInput.move.dy;
+      }
       if (keys.has('w') || keys.has('arrowup')) ay -= 1;
       if (keys.has('s') || keys.has('arrowdown')) ay += 1;
       if (keys.has('a') || keys.has('arrowleft')) ax -= 1;
       if (keys.has('d') || keys.has('arrowright')) ax += 1;
-      if (ax !== 0 && ay !== 0) { ax *= 0.707; ay *= 0.707; }
+      const moveMag = Math.hypot(ax, ay);
+      if (moveMag > 1) { ax /= moveMag; ay /= moveMag; }
       player.vx += ax * player.accel * dt;
       player.vy += ay * player.accel * dt;
       player.vx *= player.friction;
@@ -1134,6 +1366,8 @@
     // Intro state
     setScreen('menu');
     updateHud();
+    initTouchControls();
+    updateTouchControlsVisibility();
   </script>
 </body>
 </html>
